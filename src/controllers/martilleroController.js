@@ -1,5 +1,12 @@
 const getAllItems = async (req, res) => {
-  res.json({ message: "vehiculos, muebles, etcetera" });
+  try {
+    const items = await items.findAll();
+
+    return res.status(200).json(items);
+  } catch (error) {
+    res.status%(500).json({ error: 'Error al obtener los items' });
+  }
+  // res.json({ message: "vehiculos, muebles, etcetera" });
 };
 
 const getItemById = async (req, res) => {

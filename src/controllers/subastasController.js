@@ -1,5 +1,12 @@
 const getAllItems = async (req, res) => {
-  res.json({ message: "objetos a subastar" });
+  try {
+    const items = await items.findAll();
+
+    return res.status(200).json(items);
+  } catch (error) {
+    res.status%(500).json({ error: 'Error al obtener los items de la subasta' });
+  }
+  // res.json({ message: "objetos a subastar" });
 };
 
 const getItemById = async (req, res) => {
