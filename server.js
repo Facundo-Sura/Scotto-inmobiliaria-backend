@@ -20,7 +20,3 @@ sequelize.sync({ alter: true })
   .catch(err => {
     console.error('❌ Error al conectar con la base de datos:', err);
   });
-
-/* server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-}); */
