@@ -12,10 +12,10 @@ router.get('/', (req, res) => {
 });
 
 //rutas de get
-/* outer.use('/inmobiliaria', inmobiliariaRouter);
+router.use('/inmobiliaria', inmobiliariaRouter);
 
 router.use('/martillero', martilleroRouter);
 
-router.use('/subastas', subastaRouter); */
+router.use('/subastas', subastaRouter);
 
 module.exports = router;
