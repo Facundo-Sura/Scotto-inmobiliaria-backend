@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 });
 
 //rutas de get
-r/* outer.use('/inmobiliaria', inmobiliariaRouter);
+/* outer.use('/inmobiliaria', inmobiliariaRouter);
 
 router.use('/martillero', martilleroRouter);
 
