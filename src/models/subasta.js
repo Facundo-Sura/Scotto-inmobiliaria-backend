@@ -24,7 +24,7 @@ const Subasta = sequelize.define('Subasta', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
-    imageen: {
+    imagen: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -40,7 +40,7 @@ const Subasta = sequelize.define('Subasta', {
                 msg: 'La fecha de fin debe ser una fecha válida'
             },
             isAfter: {
-                args: new Date().toString(),
+                args: new Date(),
                 msg: 'La fecha de fin debe ser una fecha futura'
             }
         }
@@ -63,9 +63,9 @@ const Subasta = sequelize.define('Subasta', {
         }
     },
     estado: {
-        type: DataTypes.ENUM('activa', 'proxiammente', 'finalizada'),
+        type: DataTypes.ENUM('activa', 'proximamente', 'finalizada'),
         allowNull: false,
-        defaultValue: 'proxiammente',
+        defaultValue: 'proximamente',
     },
     categoria: {
         type: DataTypes.STRING,

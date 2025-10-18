@@ -40,7 +40,7 @@ const addNewItem = async (req, res) => {
 };
 
 const updateItem = async (req, res) => {
-  try {
+   try {
     const { id } = req.params;
     const [updated] = await Subasta.update(req.body, {
       where: { id }
@@ -51,6 +51,13 @@ const updateItem = async (req, res) => {
     }
 
     const itemActualizado = await Subasta.findByPk(id);
+    
+    // ✅ CORRECCIÓN: AGREGAR ESTA LÍNEA
+    res.status(200).json({ 
+      message: "Item de la subasta actualizado exitosamente",
+      item: itemActualizado 
+    });
+    
   } catch (error) {
     console.error('Error:', error);
     res.status(400).json({ error: 'Error al actualizar el item de la subasta', detalles: error.errors });
