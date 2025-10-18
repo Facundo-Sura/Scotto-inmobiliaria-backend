@@ -6,7 +6,7 @@ const getAllItems = async (req, res) => {
     return res.status(200).json(items);
   } catch (error) {
     console.error('Error:', error);
-    res.status%(500).json({ error: 'Error al obtener los items de la subasta' });
+    res.status(500).json({ error: 'Error al obtener los items de la subasta' });
   }
 };
 
