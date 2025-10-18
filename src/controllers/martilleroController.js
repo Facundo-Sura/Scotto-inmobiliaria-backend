@@ -1,4 +1,4 @@
-const Martillero = require('../models/Martillero');
+const { Martillero } = require('../models/Martillero');
 
 const getAllItems = async (req, res) => {
   try {
