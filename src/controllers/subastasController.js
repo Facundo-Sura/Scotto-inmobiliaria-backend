@@ -1,4 +1,4 @@
-const { Subasta } = require('../models/subasta');
+const Subasta = require('../models/subasta');
 
 const getAllItems = async (req, res) => {
   try {

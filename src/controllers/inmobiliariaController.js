@@ -1,4 +1,4 @@
-const { Inmobiliaria } = require('../models/inmobiliaria.js');
+const Inmobiliaria = require('../models/inmobiliaria.js');
 
 const getAllProperties = async (req, res) => {
   try {
