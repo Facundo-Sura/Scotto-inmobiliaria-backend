@@ -29,7 +29,7 @@ const Inmobiliaria = sequelize.define('Inmobiliaria', {
             },
             len: {
                 args: [10, 2000],
-                msg: 'La descripción debe tener entre 10 y 2000 caracteres'
+                msg: 'La descripción debe tener entre 10 и 2000 caracteres'
             }
         }
     },
@@ -55,30 +55,12 @@ const Inmobiliaria = sequelize.define('Inmobiliaria', {
             }
         }
     },
-    ciudad: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: {
-                msg: 'La ciudad es requerida'
-            }
-        }
-    },
-    provincia: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: {
-                msg: 'La provincia es requerida'
-            }
-        }
-    },
     tipo: {
-        type: DataTypes.ENUM('casa', 'departamento', 'terreno', 'local', 'oficina'),
+        type: DataTypes.ENUM('casa', 'departamento', 'terreno', 'local'),
         allowNull: false,
         validate: {
             isIn: {
-                args: [['casa', 'departamento', 'terreno', 'local', 'oficina']],
+                args: [['casa', 'departamento', 'terreno', 'local']],
                 msg: 'Tipo de propiedad no válido'
             }
         }
@@ -96,6 +78,7 @@ const Inmobiliaria = sequelize.define('Inmobiliaria', {
     habitaciones: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        defaultValue: 0,
         validate: {
             isInt: {
                 msg: 'Las habitaciones deben ser un número entero'
@@ -106,22 +89,10 @@ const Inmobiliaria = sequelize.define('Inmobiliaria', {
             }
         }
     },
-    banos: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        validate: {
-            isInt: {
-                msg: 'Los baños deben ser un número entero'
-            },
-            min: {
-                args: [0],
-                msg: 'Los baños no pueden ser negativos'
-            }
-        }
-    },
     metros: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        defaultValue: 0,
         validate: {
             isInt: {
                 msg: 'Los metros deben ser un número entero'
@@ -134,21 +105,11 @@ const Inmobiliaria = sequelize.define('Inmobiliaria', {
     },
     imagen: {
         type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-            isUrl: {
-                msg: 'La imagen debe ser una URL válida'
-            }
-        }
-    },
-    fecha_publicacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
+        allowNull: true
     }
 }, {
     tableName: 'inmobiliarias',
-    timestamps: true, // Esto crea automáticamente created_at y updated_at
+    timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'
 });
