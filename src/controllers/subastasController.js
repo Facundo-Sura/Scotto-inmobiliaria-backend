@@ -1,4 +1,5 @@
 const Subasta = require('../models/subasta');
+const path = require('path');
 
 const getAllItems = async (req, res) => {
   try {
@@ -28,7 +29,15 @@ const getItemById = async (req, res) => {
 
 const addNewItem = async (req, res) => {
   try {
-    const nuevoItem = await Subasta.create(req.body);
+    // Preparar datos para la creación
+    const itemData = { ...req.body };
+    
+    // Si hay un archivo subido, guardar la ruta de la imagen
+    if (req.file) {
+      itemData.imagen = `/uploads/${req.file.filename}`;
+    }
+    
+    const nuevoItem = await Subasta.create(itemData);
     res.status(201).json({ 
       message: "Item de la subasta creado exitosamente",
       item: nuevoItem 
