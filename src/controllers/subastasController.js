@@ -1,5 +1,12 @@
 const Subasta = require('../models/subasta');
-const path = require('path');
+const cloudinary = require('cloudinary').v2;
+
+// Configuración de Cloudinary (debes tener esto en tu archivo de configuración o aquí)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const getAllItems = async (req, res) => {
   try {
@@ -29,12 +36,13 @@ const getItemById = async (req, res) => {
 
 const addNewItem = async (req, res) => {
   try {
-    // Preparar datos para la creación
     const itemData = { ...req.body };
     
-    // Si hay un archivo subido, guardar la ruta de la imagen
+    // Si hay un archivo subido, subirlo a Cloudinary
     if (req.file) {
-      itemData.imagen = `/uploads/${req.file.filename}`;
+      // Con multer-storage-cloudinary, la URL ya está disponible en req.file.path
+      itemData.imagen = req.file.path;
+      itemData.imagen_public_id = req.file.filename; // Esto será el public_id de Cloudinary
     }
     
     const nuevoItem = await Subasta.create(itemData);
@@ -51,7 +59,28 @@ const addNewItem = async (req, res) => {
 const updateItem = async (req, res) => {
    try {
     const { id } = req.params;
-    const [updated] = await Subasta.update(req.body, {
+    
+    // Buscar el item actual para obtener información de la imagen existente
+    const itemActual = await Subasta.findByPk(id);
+    if (!itemActual) {
+      return res.status(404).json({ error: 'Item de la subasta no encontrado' });
+    }
+
+    const updateData = { ...req.body };
+    
+    // Si hay una nueva imagen subida
+    if (req.file) {
+      // Eliminar la imagen anterior de Cloudinary si existe
+      if (itemActual.imagen_public_id) {
+        await cloudinary.uploader.destroy(itemActual.imagen_public_id);
+      }
+      
+      // Usar la nueva imagen de Cloudinary
+      updateData.imagen = req.file.path;
+      updateData.imagen_public_id = req.file.filename;
+    }
+    
+    const [updated] = await Subasta.update(updateData, {
       where: { id }
     });
 
@@ -61,7 +90,6 @@ const updateItem = async (req, res) => {
 
     const itemActualizado = await Subasta.findByPk(id);
     
-    // ✅ CORRECCIÓN: AGREGAR ESTA LÍNEA
     res.status(200).json({ 
       message: "Item de la subasta actualizado exitosamente",
       item: itemActualizado 
@@ -76,6 +104,18 @@ const updateItem = async (req, res) => {
 const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Buscar el item para obtener información de la imagen en Cloudinary
+    const item = await Subasta.findByPk(id);
+    if (!item) {
+      return res.status(404).json({ error: 'Item de la subasta no encontrado' });
+    }
+
+    // Eliminar la imagen de Cloudinary si existe
+    if (item.imagen_public_id) {
+      await cloudinary.uploader.destroy(item.imagen_public_id);
+    }
+
     const deleted = await Subasta.destroy({
       where: { id }
     });

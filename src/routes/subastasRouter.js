@@ -9,7 +9,8 @@ router.get('/:id', getItemById);
 
 router.post('/', upload.single('imagen'), addNewItem);
 
-router.put('/:id', updateItem);
+// AGREGAR upload.single('imagen') también para update
+router.put('/:id', upload.single('imagen'), updateItem);
 
 router.delete('/:id', deleteItem);
 

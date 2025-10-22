@@ -28,6 +28,11 @@ const Subasta = sequelize.define('Subasta', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    imagen_public_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'ID público de la imagen en Cloudinary para gestión'
+    },
     inicioFecha: {
         type: DataTypes.DATE,
         allowNull: false,
