@@ -10,22 +10,43 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'subastas',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [
-      { width: 800, height: 600, crop: 'limit' },
-      { quality: 'auto' }
-    ]
+  params: (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    const folder = req.baseUrl.includes('martillero') ? 'martillero' : 
+              req.baseUrl.includes('inmobiliaria') ? 'inmobiliaria' : 'subastas';
+    
+    const baseParams = {
+      folder: isVideo ? `${folder}/videos` : `${folder}/images`,
+      allowed_formats: isVideo 
+        ? ['mp4', 'mov', 'avi', 'mkv', 'webm'] 
+        : ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      resource_type: isVideo ? 'video' : 'image'
+    };
+    
+    // Solo aplicar transformaciones a imágenes
+    if (!isVideo) {
+      baseParams.transformation = [
+        { width: 800, height: 600, crop: 'limit' },
+        { quality: 'auto' }
+      ];
+    }
+    
+    return baseParams;
   }
 });
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: 100 * 1024 * 1024, // 100MB para videos
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos de imagen o video'), false);
+    }
   }
 });
 
-// Exportar para múltiples archivos
-module.exports = upload.array('imagenes', 10);
+module.exports = upload.array('archivos', 10);

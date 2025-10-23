@@ -75,6 +75,27 @@ const Subasta = sequelize.define('Subasta', {
             this.setDataValue('imagenes_public_ids', JSON.stringify(arrayValue));
         }
     },
+    tipos_archivos: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('tipos_archivos');
+            try {
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing tipos_archivos:', error);
+                return [];
+            }
+        },
+        set(value) {
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('tipos_archivos', JSON.stringify(arrayValue));
+        }
+    },
     inicioFecha: {
         type: DataTypes.DATE,
         allowNull: false,

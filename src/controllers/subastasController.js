@@ -11,7 +11,7 @@ const getAllItems = async (req, res) => {
   try {
     const items = await Subasta.findAll();
     
-    const itemsConImagenesCorregidas = items.map(item => {
+    const itemsConArchivosCorregidos = items.map(item => {
       const itemData = item.toJSON();
       
       if (!itemData.imagenes || !Array.isArray(itemData.imagenes)) {
@@ -21,7 +21,7 @@ const getAllItems = async (req, res) => {
       return itemData;
     });
     
-    return res.status(200).json(itemsConImagenesCorregidas);
+    return res.status(200).json(itemsConArchivosCorregidos);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Error al obtener los items de la subasta' });
@@ -53,23 +53,32 @@ const getItemById = async (req, res) => {
 const addNewItem = async (req, res) => {
   try {
     const itemData = { ...req.body };
-    const imagenesUrls = [];
-    const imagenesPublicIds = [];
+    const archivosUrls = [];
+    const archivosPublicIds = [];
+    const tiposArchivos = [];
 
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: 'subastas'
-        });
+        const isVideo = file.mimetype.startsWith('video/');
+        const folder = 'subastas';
         
-        imagenesUrls.push(result.secure_url);
-        imagenesPublicIds.push(result.public_id);
+        const uploadOptions = {
+          folder: isVideo ? `${folder}/videos` : `${folder}/images`,
+          resource_type: isVideo ? 'video' : 'image'
+        };
+
+        const result = await cloudinary.uploader.upload(file.path, uploadOptions);
+        
+        archivosUrls.push(result.secure_url);
+        archivosPublicIds.push(result.public_id);
+        tiposArchivos.push(isVideo ? 'video' : 'imagen');
       }
 
-      itemData.imagen = imagenesUrls[0];
-      itemData.imagen_public_id = imagenesPublicIds[0];
-      itemData.imagenes = imagenesUrls;
-      itemData.imagenes_public_ids = imagenesPublicIds;
+      itemData.imagen = archivosUrls[0];
+      itemData.imagen_public_id = archivosPublicIds[0];
+      itemData.imagenes = archivosUrls;
+      itemData.imagenes_public_ids = archivosPublicIds;
+      itemData.tipos_archivos = tiposArchivos;
     }
     
     const nuevoItem = await Subasta.create(itemData);
@@ -79,6 +88,21 @@ const addNewItem = async (req, res) => {
     });
   } catch (error) {
     console.error('Error:', error);
+    
+    // Limpiar archivos subidos en caso de error
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const publicId = file.filename;
+          await cloudinary.uploader.destroy(publicId, {
+            resource_type: file.mimetype.startsWith('video/') ? 'video' : 'image'
+          });
+        } catch (deleteError) {
+          console.error('Error eliminando archivo de Cloudinary:', deleteError);
+        }
+      }
+    }
+    
     res.status(400).json({ error: 'Error al crear el item de la subasta', detalles: error.errors });
   }
 };
@@ -94,27 +118,37 @@ const updateItem = async (req, res) => {
 
     const updateData = { ...req.body };
     
-    const imagenesExistentes = itemActual.imagenes || [];
+    const archivosExistentes = itemActual.imagenes || [];
     const publicIdsExistentes = itemActual.imagenes_public_ids || [];
+    const tiposExistentes = itemActual.tipos_archivos || [];
 
     if (req.files && req.files.length > 0) {
-      const nuevasImagenesUrls = [...imagenesExistentes];
+      const nuevosArchivosUrls = [...archivosExistentes];
       const nuevosPublicIds = [...publicIdsExistentes];
+      const nuevosTipos = [...tiposExistentes];
 
       for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: 'subastas'
-        });
+        const isVideo = file.mimetype.startsWith('video/');
+        const folder = 'subastas';
         
-        nuevasImagenesUrls.push(result.secure_url);
+        const uploadOptions = {
+          folder: isVideo ? `${folder}/videos` : `${folder}/images`,
+          resource_type: isVideo ? 'video' : 'image'
+        };
+
+        const result = await cloudinary.uploader.upload(file.path, uploadOptions);
+        
+        nuevosArchivosUrls.push(result.secure_url);
         nuevosPublicIds.push(result.public_id);
+        nuevosTipos.push(isVideo ? 'video' : 'imagen');
       }
 
-      updateData.imagenes = nuevasImagenesUrls;
+      updateData.imagenes = nuevosArchivosUrls;
       updateData.imagenes_public_ids = nuevosPublicIds;
+      updateData.tipos_archivos = nuevosTipos;
       
-      if (nuevasImagenesUrls.length > 0) {
-        updateData.imagen = nuevasImagenesUrls[0];
+      if (nuevosArchivosUrls.length > 0) {
+        updateData.imagen = nuevosArchivosUrls[0];
         updateData.imagen_public_id = nuevosPublicIds[0];
       }
     }
@@ -149,13 +183,15 @@ const deleteItem = async (req, res) => {
       return res.status(404).json({ error: 'Item de la subasta no encontrado' });
     }
 
-    if (item.imagen_public_id) {
-      await cloudinary.uploader.destroy(item.imagen_public_id);
-    }
-
+    // Eliminar archivos de Cloudinary
     if (item.imagenes_public_ids && Array.isArray(item.imagenes_public_ids)) {
-      for (const publicId of item.imagenes_public_ids) {
-        await cloudinary.uploader.destroy(publicId);
+      for (let i = 0; i < item.imagenes_public_ids.length; i++) {
+        const publicId = item.imagenes_public_ids[i];
+        const resourceType = item.tipos_archivos && item.tipos_archivos[i] === 'video' ? 'video' : 'image';
+        
+        await cloudinary.uploader.destroy(publicId, {
+          resource_type: resourceType
+        });
       }
     }
 

@@ -77,11 +77,79 @@ const Martillero = sequelize.define('Martillero', {
     },
     imagen: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
+    },
+    imagenes: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('imagenes');
+            try {
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing imagenes:', error);
+                return [];
+            }
+        },
+        set(value) {
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('imagenes', JSON.stringify(arrayValue));
+        }
+    },
+    imagen_public_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: 'ID público de la imagen principal en Cloudinary'
+    },
+    imagenes_public_ids: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('imagenes_public_ids');
+            try {
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing imagenes_public_ids:', error);
+                return [];
+            }
+        },
+        set(value) {
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('imagenes_public_ids', JSON.stringify(arrayValue));
+        }
+    },
+    tipos_archivos: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('tipos_archivos');
+            try {
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing tipos_archivos:', error);
+                return [];
+            }
+        },
+        set(value) {
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('tipos_archivos', JSON.stringify(arrayValue));
+        }
     }
 },{
     tableName: 'martilleros',
-    timestamps: true, // Esto crea automáticamente created_at y updated_at
+    timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'
 });
