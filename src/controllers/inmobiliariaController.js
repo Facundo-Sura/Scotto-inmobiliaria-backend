@@ -55,12 +55,22 @@ const addNewProperty = async (req, res) => {
     console.log('📥 Request body:', req.body);
     console.log('📁 Request files:', req.files);
     
-    const propiedadData = { ...req.body };
+    // ✅ CORRECCIÓN: Incluir TODOS los campos del formulario
+    const propiedadData = { 
+      titulo: req.body.titulo,
+      descripcion: req.body.descripcion,
+      precio: req.body.precio,
+      tipo: req.body.tipo,
+      operacion: req.body.operacion,
+      direccion: req.body.direccion,
+      metros: req.body.metros,
+      habitaciones: req.body.habitaciones
+    };
+
     const archivosUrls = [];
     const archivosPublicIds = [];
     const tiposArchivos = [];
 
-    // ✅ VERIFICAR: ¿req.files existe? ¿O es req.file?
     if (req.files && req.files.length > 0) {
       console.log(`📸 Procesando ${req.files.length} archivos`);
       
@@ -82,6 +92,7 @@ const addNewProperty = async (req, res) => {
         tiposArchivos.push(isVideo ? 'video' : 'imagen');
       }
 
+      // ✅ Agregar campos de imágenes al objeto principal
       propiedadData.imagen = archivosUrls[0];
       propiedadData.imagen_public_id = archivosPublicIds[0];
       propiedadData.imagenes = archivosUrls;
@@ -89,19 +100,27 @@ const addNewProperty = async (req, res) => {
       propiedadData.tipos_archivos = tiposArchivos;
     } else {
       console.log('ℹ️ No hay archivos en la request');
-      // ✅ Asegurar que los campos de imágenes estén definidos
+      // Campos por defecto para imágenes
       propiedadData.imagen = null;
       propiedadData.imagenes = [];
       propiedadData.imagenes_public_ids = [];
       propiedadData.tipos_archivos = [];
     }
 
-    // ✅ CONVERTIR campos numéricos - IMPORTANTE
+    // ✅ CONVERTIR campos numéricos - CRÍTICO
     if (propiedadData.precio) propiedadData.precio = parseFloat(propiedadData.precio);
     if (propiedadData.metros) propiedadData.metros = parseInt(propiedadData.metros);
     if (propiedadData.habitaciones) propiedadData.habitaciones = parseInt(propiedadData.habitaciones);
     
     console.log('📊 Datos procesados para crear:', propiedadData);
+
+    // ✅ VERIFICAR que los campos requeridos estén presentes
+    if (!propiedadData.titulo || !propiedadData.precio || !propiedadData.tipo || !propiedadData.operacion || !propiedadData.direccion) {
+      return res.status(400).json({ 
+        error: 'Faltan campos requeridos', 
+        detalles: 'Título, precio, tipo, operación y dirección son obligatorios' 
+      });
+    }
 
     const nuevaPropiedad = await Inmobiliaria.create(propiedadData);
     
@@ -123,6 +142,13 @@ const addNewProperty = async (req, res) => {
       return res.status(400).json({ 
         error: 'Errores de validación', 
         detalles: errores 
+      });
+    }
+    
+    if (error.name === 'SequelizeDatabaseError') {
+      return res.status(400).json({ 
+        error: 'Error de base de datos', 
+        detalles: error.message 
       });
     }
     
