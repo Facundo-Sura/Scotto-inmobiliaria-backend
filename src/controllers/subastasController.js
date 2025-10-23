@@ -37,12 +37,28 @@ const getItemById = async (req, res) => {
 const addNewItem = async (req, res) => {
   try {
     const itemData = { ...req.body };
-    
-    // Si hay un archivo subido, subirlo a Cloudinary
-    if (req.file) {
-      // Con multer-storage-cloudinary, la URL ya está disponible en req.file.path
-      itemData.imagen = req.file.path;
-      itemData.imagen_public_id = req.file.filename; // Esto será el public_id de Cloudinary
+    const imagenesUrls = [];
+    const imagenesPublicIds = [];
+
+    // Si hay archivos subidos
+    if (req.files && req.files.length > 0) {
+      // Subir todas las imágenes a Cloudinary
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'subastas'
+        });
+        
+        imagenesUrls.push(result.secure_url);
+        imagenesPublicIds.push(result.public_id);
+      }
+
+      // La primera imagen es la principal
+      itemData.imagen = imagenesUrls[0];
+      itemData.imagen_public_id = imagenesPublicIds[0];
+      
+      // Todas las imágenes
+      itemData.imagenes = imagenesUrls;
+      itemData.imagenes_public_ids = imagenesPublicIds;
     }
     
     const nuevoItem = await Subasta.create(itemData);
@@ -57,27 +73,35 @@ const addNewItem = async (req, res) => {
 };
 
 const updateItem = async (req, res) => {
-   try {
+  try {
     const { id } = req.params;
     
-    // Buscar el item actual para obtener información de la imagen existente
     const itemActual = await Subasta.findByPk(id);
     if (!itemActual) {
       return res.status(404).json({ error: 'Item de la subasta no encontrado' });
     }
 
     const updateData = { ...req.body };
-    
-    // Si hay una nueva imagen subida
-    if (req.file) {
-      // Eliminar la imagen anterior de Cloudinary si existe
-      if (itemActual.imagen_public_id) {
-        await cloudinary.uploader.destroy(itemActual.imagen_public_id);
+    const nuevasImagenesUrls = [...(itemActual.imagenes || [])];
+    const nuevasImagenesPublicIds = [...(itemActual.imagenes_public_ids || [])];
+
+    // Si hay nuevas imágenes subidas
+    if (req.files && req.files.length > 0) {
+      // Subir nuevas imágenes a Cloudinary
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'subastas'
+        });
+        
+        nuevasImagenesUrls.push(result.secure_url);
+        nuevasImagenesPublicIds.push(result.public_id);
       }
-      
-      // Usar la nueva imagen de Cloudinary
-      updateData.imagen = req.file.path;
-      updateData.imagen_public_id = req.file.filename;
+
+      // Si hay nuevas imágenes, la primera se convierte en la principal
+      updateData.imagen = nuevasImagenesUrls[0];
+      updateData.imagen_public_id = nuevasImagenesPublicIds[0];
+      updateData.imagenes = nuevasImagenesUrls;
+      updateData.imagenes_public_ids = nuevasImagenesPublicIds;
     }
     
     const [updated] = await Subasta.update(updateData, {

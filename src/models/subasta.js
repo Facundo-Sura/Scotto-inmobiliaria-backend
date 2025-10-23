@@ -28,10 +28,34 @@ const Subasta = sequelize.define('Subasta', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    imagenes: {
+        type: DataTypes.JSON, // ✅ NUEVO: Array de imágenes
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('imagenes');
+            return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+            this.setDataValue('imagenes', JSON.stringify(value || []));
+        }
+    },
     imagen_public_id: {
         type: DataTypes.STRING,
         allowNull: true,
-        comment: 'ID público de la imagen en Cloudinary para gestión'
+        comment: 'ID público de la imagen principal en Cloudinary'
+    },
+    imagenes_public_ids: {
+        type: DataTypes.JSON, // ✅ NUEVO: Array de public_ids
+        allowNull: true,
+        defaultValue: [],
+        get() {
+            const rawValue = this.getDataValue('imagenes_public_ids');
+            return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value) {
+            this.setDataValue('imagenes_public_ids', JSON.stringify(value || []));
+        }
     },
     inicioFecha: {
         type: DataTypes.DATE,
@@ -83,9 +107,9 @@ const Subasta = sequelize.define('Subasta', {
     }
 },{
     tableName: 'subastas',
-    timestamps: true, // Esto crea automáticamente created_at y updated_at
+    timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'
-})
+});
 
 module.exports = Subasta;

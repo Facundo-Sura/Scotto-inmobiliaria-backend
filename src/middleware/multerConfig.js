@@ -35,10 +35,13 @@ const fileFilter = (req, file, cb) => {
 // Configurar multer
 const upload = multer({
   storage: storage,
-  fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB límite
+    fileSize: 10 * 1024 * 1024, // 10MB por archivo
   }
 });
 
-module.exports = upload;
+// ✅ Exportar tanto single como array
+module.exports = {
+  single: upload.single('imagen'),
+  array: upload.array('imagenes', 10) // Máximo 10 imágenes
+};
