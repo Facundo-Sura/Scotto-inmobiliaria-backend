@@ -52,12 +52,18 @@ const getPropertyById = async (req, res) => {
 
 const addNewProperty = async (req, res) => {
   try {
+    console.log('📥 Request body:', req.body);
+    console.log('📁 Request files:', req.files);
+    
     const propiedadData = { ...req.body };
     const archivosUrls = [];
     const archivosPublicIds = [];
     const tiposArchivos = [];
 
+    // ✅ VERIFICAR: ¿req.files existe? ¿O es req.file?
     if (req.files && req.files.length > 0) {
+      console.log(`📸 Procesando ${req.files.length} archivos`);
+      
       for (const file of req.files) {
         const isVideo = file.mimetype.startsWith('video/');
         const folder = 'inmobiliaria';
@@ -67,6 +73,8 @@ const addNewProperty = async (req, res) => {
           resource_type: isVideo ? 'video' : 'image'
         };
 
+        console.log('Subiendo archivo:', file.originalname, file.mimetype);
+        
         const result = await cloudinary.uploader.upload(file.path, uploadOptions);
         
         archivosUrls.push(result.secure_url);
@@ -79,20 +87,44 @@ const addNewProperty = async (req, res) => {
       propiedadData.imagenes = archivosUrls;
       propiedadData.imagenes_public_ids = archivosPublicIds;
       propiedadData.tipos_archivos = tiposArchivos;
+    } else {
+      console.log('ℹ️ No hay archivos en la request');
+      // ✅ Asegurar que los campos de imágenes estén definidos
+      propiedadData.imagen = null;
+      propiedadData.imagenes = [];
+      propiedadData.imagenes_public_ids = [];
+      propiedadData.tipos_archivos = [];
     }
 
-    // Convertir campos numéricos
-    if (req.body.precio) propiedadData.precio = parseFloat(req.body.precio);
-    if (req.body.habitaciones) propiedadData.habitaciones = parseInt(req.body.habitaciones);
-    if (req.body.metros) propiedadData.metros = parseInt(req.body.metros);
+    // ✅ CONVERTIR campos numéricos - IMPORTANTE
+    if (propiedadData.precio) propiedadData.precio = parseFloat(propiedadData.precio);
+    if (propiedadData.metros) propiedadData.metros = parseInt(propiedadData.metros);
+    if (propiedadData.habitaciones) propiedadData.habitaciones = parseInt(propiedadData.habitaciones);
     
+    console.log('📊 Datos procesados para crear:', propiedadData);
+
     const nuevaPropiedad = await Inmobiliaria.create(propiedadData);
+    
+    console.log('✅ Propiedad creada exitosamente:', nuevaPropiedad.id);
+    
     res.status(201).json({ 
       message: "Propiedad creada exitosamente",
       propiedad: nuevaPropiedad 
     });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Error en addNewProperty:', error);
+    
+    // ✅ MOSTRAR errores de validación específicos
+    if (error.name === 'SequelizeValidationError') {
+      const errores = error.errors.map(err => ({
+        campo: err.path,
+        mensaje: err.message
+      }));
+      return res.status(400).json({ 
+        error: 'Errores de validación', 
+        detalles: errores 
+      });
+    }
     
     // Limpiar archivos subidos en caso de error
     if (req.files && req.files.length > 0) {
@@ -108,7 +140,10 @@ const addNewProperty = async (req, res) => {
       }
     }
     
-    res.status(400).json({ error: 'Error al crear la propiedad', detalles: error.errors });
+    res.status(400).json({ 
+      error: 'Error al crear la propiedad', 
+      detalles: error.message 
+    });
   }
 };
 
