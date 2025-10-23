@@ -5,8 +5,8 @@ const router = Router();
 
 router.get('/', getAllItems)
 router.get('/:id', getItemById);
-router.post('/', upload.array, addNewItem); // ✅ Cambiar a array
-router.put('/:id', upload.array, updateItem); // ✅ Cambiar a array
+router.post('/', upload, addNewItem);
+router.put('/:id', upload, updateItem);
 router.delete('/:id', deleteItem);
 
 module.exports = router;
