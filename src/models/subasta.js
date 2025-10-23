@@ -29,15 +29,26 @@ const Subasta = sequelize.define('Subasta', {
         allowNull: true,
     },
     imagenes: {
-        type: DataTypes.JSON, // ✅ NUEVO: Array de imágenes
+        type: DataTypes.JSON,
         allowNull: true,
         defaultValue: [],
         get() {
             const rawValue = this.getDataValue('imagenes');
-            return rawValue ? JSON.parse(rawValue) : [];
+            try {
+                // ✅ CORRECCIÓN: Manejar casos null, undefined o string vacío
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing imagenes:', error);
+                return []; // Retornar array vacío en caso de error
+            }
         },
         set(value) {
-            this.setDataValue('imagenes', JSON.stringify(value || []));
+            // ✅ CORRECCIÓN: Asegurar que siempre sea un array válido
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('imagenes', JSON.stringify(arrayValue));
         }
     },
     imagen_public_id: {
@@ -46,15 +57,26 @@ const Subasta = sequelize.define('Subasta', {
         comment: 'ID público de la imagen principal en Cloudinary'
     },
     imagenes_public_ids: {
-        type: DataTypes.JSON, // ✅ NUEVO: Array de public_ids
+        type: DataTypes.JSON,
         allowNull: true,
         defaultValue: [],
         get() {
             const rawValue = this.getDataValue('imagenes_public_ids');
-            return rawValue ? JSON.parse(rawValue) : [];
+            try {
+                // ✅ CORRECCIÓN: Manejar casos null, undefined o string vacío
+                if (!rawValue || rawValue === 'null' || rawValue === '""') {
+                    return [];
+                }
+                return typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue;
+            } catch (error) {
+                console.error('Error parsing imagenes_public_ids:', error);
+                return []; // Retornar array vacío en caso de error
+            }
         },
         set(value) {
-            this.setDataValue('imagenes_public_ids', JSON.stringify(value || []));
+            // ✅ CORRECCIÓN: Asegurar que siempre sea un array válido
+            const arrayValue = Array.isArray(value) ? value : [];
+            this.setDataValue('imagenes_public_ids', JSON.stringify(arrayValue));
         }
     },
     inicioFecha: {

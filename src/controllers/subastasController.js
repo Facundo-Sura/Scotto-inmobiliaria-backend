@@ -11,7 +11,20 @@ cloudinary.config({
 const getAllItems = async (req, res) => {
   try {
     const items = await Subasta.findAll();
-    return res.status(200).json(items);
+    
+    // ✅ CORRECCIÓN: Asegurar que las imágenes sean arrays válidos
+    const itemsConImagenesCorregidas = items.map(item => {
+      const itemData = item.toJSON();
+      
+      // Si no hay campo imagenes, crear uno basado en la imagen principal
+      if (!itemData.imagenes || !Array.isArray(itemData.imagenes)) {
+        itemData.imagenes = itemData.imagen ? [itemData.imagen] : [];
+      }
+      
+      return itemData;
+    });
+    
+    return res.status(200).json(itemsConImagenesCorregidas);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Error al obtener los items de la subasta' });
@@ -27,7 +40,14 @@ const getItemById = async (req, res) => {
       return res.status(404).json({ error: 'Item de la subasta no encontrado' });
     }
 
-    res.status(200).json(item);
+    // ✅ CORRECCIÓN: Asegurar que las imágenes sean arrays válidos
+    const itemData = item.toJSON();
+    
+    if (!itemData.imagenes || !Array.isArray(itemData.imagenes)) {
+      itemData.imagenes = itemData.imagen ? [itemData.imagen] : [];
+    }
+
+    res.status(200).json(itemData);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'Error al obtener el item de la subasta' });
